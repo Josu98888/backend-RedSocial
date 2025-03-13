@@ -16,9 +16,15 @@ class User extends Authenticatable
      * The attributes that are mass assignable.
      *
      * @var list<string>
+     * 
      */
+    //campos que se pueden rellenar 
     protected $fillable = [
         'name',
+        'lastname',
+        'nick',
+        'role',
+        'image',
         'email',
         'password',
     ];
@@ -28,6 +34,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+    // campos que no se pueden mostrar 
     protected $hidden = [
         'password',
         'remember_token',

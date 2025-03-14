@@ -52,4 +52,30 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    // ORM
+    // Relación de uno a muchos (1 usuario tiene N imágenes)
+    public function images() {
+        return $this->hasMany(Image::class)->orderBy('id', 'desc');
+    }
+
+    // relacion de uno a muchos (1 usuario tiene N comentarios)
+    public function comments() {
+        return $this->hasMany(Comment::class)->orderBy('id', 'desc');
+    }
+
+    // relacion de uno a muchos (1 usuario tiene N likes)
+    public function likes() {
+        return $this->hasMany(Like::class);
+    }
+
+    // relacion de uno a muchos (1 usuario tiene N mensajes enviados)
+    public function messagesSent() {
+        return $this->hasMany(Message::class, 'sender_id')->orderBy('id', 'desc');
+    }
+
+    // relacion de uno a muchos (1 usuario tiene N mensajes recibidos)
+    public function messagesReceived() {
+        return $this->hasMany(Message::class, 'receiver_id')->orderBy('id', 'desc');
+    }
 }

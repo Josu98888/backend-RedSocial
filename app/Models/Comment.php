@@ -14,4 +14,14 @@ class Comment extends Model
         'content',
     ];
 
+    // ORM
+    // Relación muchos a uno (N comentarios pertenecen 1 usuario)
+    public function user() {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // Relación muchos a uno (N comentarios pertenecen 1 imagen)
+    public function image() {
+        return $this->belongsTo(Image::class, 'image_id');
+    }
 }

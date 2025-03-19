@@ -10,3 +10,4 @@ Route::get('/', function () {
 // Rutas de UserController
 Route::get('/prueba', [UserController::class, 'prueba']); 
 Route::post('/api/register', [UserController::class, 'register']);
+Route::post('/api/login', [UserController::class, 'login']);

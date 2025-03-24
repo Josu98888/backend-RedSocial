@@ -3,22 +3,23 @@
 namespace App\Http\Controllers;
 
 
-use Illuminate\Http\Request;
-
-
-//paquete para recoger los datos por solicitud
-use Illuminate\Support\Facades\Validator;  //paquete para validar lo que llega 
-use App\Models\User; //modelo del usuario
-use Illuminate\Support\Facades\Hash; // paquete para cifrar la contraseña
-use App\Helpers\JwtAuth; //helper
+use Illuminate\Http\Request;                           //paquete para recoger los datos por solicitud
+use Illuminate\Support\Facades\Validator;              //paquete para validar lo que llega 
+use App\Models\User;                                   //modelo del usuario
+use Illuminate\Support\Facades\Hash;                   // paquete para cifrar la contraseña
+use App\Helpers\JwtAuth;                               //helper
+use Illuminate\Support\Facades\Storage;                //paquete para el storage
+use Illuminate\Support\Facades\File;                   //paquete para el archivo de imagen
 
 class UserController extends Controller
 {
-    public function prueba() {
+    public function prueba()
+    {
         return "Hola desde el controlador de usuarios";
     }
 
-    public function register(Request $request) {
+    public function register(Request $request)
+    {
         //Recoge los datos que llegan por post desde la vista (en formato json)
         $json = $request->input('json', null);
         // Decodificamos el json para que php pueda leerlo
@@ -27,14 +28,14 @@ class UserController extends Controller
         $params_array = json_decode($json, true);
 
         // validamos que los datos no esten vacios
-        if(!empty($params) && !empty($params_array)) {
+        if (!empty($params) && !empty($params_array)) {
             //limpiamos los datos
             $params_array = array_map('trim', $params_array);
             //validamos los datos con el Validator
             $validate = Validator::make($params_array, [
                 'name' => 'required|alpha',
                 'lastname' => 'required|alpha',
-                'nick' => 'required|alpha', 
+                'nick' => 'required|alpha',
                 'email' => 'required|email|unique:users',
                 'password' => 'required|min:8'
             ]);
@@ -61,7 +62,7 @@ class UserController extends Controller
                     'message' => 'El usuario se ha creado correctamente',
                     'user' => $user
                 ];
-            }  else {
+            } else {
                 $data = [
                     'status' => 'error',
                     'code' => 404,
@@ -69,7 +70,6 @@ class UserController extends Controller
                     'errors' => $validate->errors()
                 ];
             }
-
         } else {
             $data = [
                 'status' => 'error',
@@ -81,7 +81,8 @@ class UserController extends Controller
         return response()->json($data, $data['code']);
     }
 
-    public function login(Request $request) {
+    public function login(Request $request)
+    {
         $JwtAuth = new JwtAuth();                       // creo el helper   
         $json = $request->input('json', null);          // Recogemos los datos del formulario en formato JSON
         $params = json_decode($json);                   // se transforma en objeto php
@@ -129,5 +130,71 @@ class UserController extends Controller
             'code' => 400,
             'message' => 'Los datos proporcionados son incompletos.'
         ], 400);
+    }
+
+    public function update(Request $request)
+    {
+        $token = $request->header('Authorization');                    //obtiene el token del encabezado de la solicitud
+
+        $jwtAuth = new JwtAuth();                        
+        $checkToken = $jwtAuth->checkToken($token);                    // se crea una instancia de JwtAuth y se verifica el token 
+        $json = $request->input('json', null);                         // Recogemos los datos del formulario en formato JSON
+        $params_array = json_decode($json, true);                      // creo un array con los datos y los decodifico
+
+        // verifica si el token es válido
+        if ($checkToken) {   
+            $user = $jwtAuth->checkToken($token, true);                          // obtener el user identificado
+            $id = $user->sub;                                                    // obtiene el ID del usuario desde el token
+            $user = User::findOrFail($id);                                       // obiene el usuario en la base de datos desde el id
+
+            $validate = Validator::make($params_array, [                         // valida los datos recibidos
+                'name' => 'required',
+                'lastname' => 'required',
+                'nick' => 'required',
+                'email' => 'email|unique:users,email,' . $user->id,
+                'image' => 'image|mimes:jpg,png,jpeg,gif|max:2048'
+            ]);
+
+            if (!$validate->fails()) {
+                $user->update($params_array);                                      // actualiza los datos del usuario (excepto la imagen)
+                
+
+                // si el user cambia la imagen
+                if ($request->hasFile('image')) {
+                    
+                    if ($user->image) {                                  
+                        Storage::disk('users')->delete($user->image);               // Elimina imagen anterior si existe
+                    }
+
+                    $image = $request->file('image');                               
+                    $image_name = time() . '_' . $image->getClientOriginalName();   // Asigna un nombre único
+                    Storage::disk('users')->put($image_name, File::get($image));    // Guarda nueva imagen
+                    $user->image = $image_name;                                     // Guardar la ruta relativa en la base de datos
+                }
+                
+                $user->save();                                                      // Guardar cambios en la base de datos
+
+                $data = [
+                    'status' => 'success',
+                    'code' => 200,
+                    'user' => $user,
+                ];
+            } else {
+                $data = [
+                    'status' => 'error',
+                    'code' => '400',
+                    'message' => 'Error al ingresar los datos.'
+                ];
+            }
+        } else {
+            $data = [
+                'status' => 'error',
+                'code' => 400,
+                'message' => 'El usuario no esta identificado.'
+            ];
+        }
+
+
+        return response()->json($data, $data['code']);
     }
 }

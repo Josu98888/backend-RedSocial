@@ -11,3 +11,4 @@ Route::get('/', function () {
 Route::get('/prueba', [UserController::class, 'prueba']); 
 Route::post('/api/register', [UserController::class, 'register']);
 Route::post('/api/login', [UserController::class, 'login']);
+Route::put('/api/user/update', [UserController::class, 'update']);

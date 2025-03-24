@@ -36,7 +36,7 @@ class Image extends Model
     // ORM
     // relacion de muchos a uno (N imagenes pertenecen 1 usuario)
     public function user() {
-        return $this->belongsToMany(User::class);
+        return $this->belongsToMany(User::class, 'user_id');
     }
 
     // relación de uno a muchos (1 imagen tiene N comentarios)

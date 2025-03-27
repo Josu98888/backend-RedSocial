@@ -218,4 +218,26 @@ class UserController extends Controller
             return response()->json($data, $data['code']);
         }
     }
+
+    public function detail($id)
+{
+    $user = User::find($id);                                 // Buscamos al usuario en la base de datos por su ID.
+
+    // Verificamos si se encontró un usuario con el ID proporcionado.
+    if (is_object($user)) {
+        $data = [                                            // Si el usuario existe, preparamos una respuesta de éxito con los datos del usuario.
+            'status' => 'success', 
+            'code' => 200,         
+            'user' => $user        
+        ];
+    } else {
+        $data = [                                            // Si el usuario no existe, devolvemos un mensaje de error.
+            'status' => 'succes',  
+            'code' => 400,         
+            'message' => 'El usuario no existe.' 
+        ];
+    }
+    
+    return response()->json($data, $data['code']);           // Retornamos la respuesta en formato JSON con el código de estado correspondiente.
+}
 }

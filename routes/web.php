@@ -13,3 +13,4 @@ Route::post('/api/register', [UserController::class, 'register']);
 Route::post('/api/login', [UserController::class, 'login']);
 Route::post('/api/user/update', [UserController::class, 'update']);
 Route::get('/api/user/image/{filename}', [UserController::class, 'getImage']);
+Route::get(('/api/user/detail/{id}'), [UserController::class, 'detail']);

@@ -133,45 +133,34 @@ class UserController extends Controller
     }
 
     public function update(Request $request)
-    {
-        $token = $request->header('Authorization');                    //obtiene el token del encabezado de la solicitud
+    {                
+        $json = $request->input('json', null);                                   // Recogemos los datos del formulario en formato JSON
+        $params_array = json_decode($json, true);                               // creo un array con los datos y los decodifico
 
-        $jwtAuth = new JwtAuth();                        
-        $checkToken = $jwtAuth->checkToken($token);                    // se crea una instancia de JwtAuth y se verifica el token 
-        $json = $request->input('json', null);                         // Recogemos los datos del formulario en formato JSON
-        $params_array = json_decode($json, true);                      // creo un array con los datos y los decodifico
-
-        // verifica si el token es válido
-        if ($checkToken) {   
-            $user = $jwtAuth->checkToken($token, true);                          // obtener el user identificado
-            $id = $user->sub;                                                    // obtiene el ID del usuario desde el token
-            $user = User::findOrFail($id);                                       // obiene el usuario en la base de datos desde el id
-
+        // verifica si los datos no estan vacios
+        if (!empty($params_array)) {   
+            $params_array = array_map('trim', $params_array);                    // Elimina los espacios en blanco de los extremos de los datos                                
+            $user = $request->authUser;                                          // Obtenemos el usuario autenticado
             $validate = Validator::make($params_array, [                         // valida los datos recibidos
                 'name' => 'required',
                 'lastname' => 'required',
                 'nick' => 'required',
                 'email' => 'email|unique:users,email,' . $user->id,
-                'image' => 'image|mimes:jpg,png,jpeg,gif|max:2048'
             ]);
 
             if (!$validate->fails()) {
                 $user->update($params_array);                                      // actualiza los datos del usuario (excepto la imagen)
                 
-
                 // si el user cambia la imagen
                 if ($request->hasFile('image')) {
-                    
                     if ($user->image) {                                  
                         Storage::disk('users')->delete($user->image);               // Elimina imagen anterior si existe
                     }
-
                     $image = $request->file('image');                               
                     $image_name = time() . '_' . $image->getClientOriginalName();   // Asigna un nombre único
                     Storage::disk('users')->put($image_name, File::get($image));    // Guarda nueva imagen
                     $user->image = $image_name;                                     // Guardar la ruta relativa en la base de datos
                 }
-                
                 $user->save();                                                      // Guardar cambios en la base de datos
 
                 $data = [
@@ -183,14 +172,16 @@ class UserController extends Controller
                 $data = [
                     'status' => 'error',
                     'code' => '400',
-                    'message' => 'Error al ingresar los datos.'
+                    'message' => 'Error al ingresar los datos.',
+                    'error' => $validate->errors()
                 ];
             }
         } else {
             $data = [
                 'status' => 'error',
                 'code' => 400,
-                'message' => 'El usuario no esta identificado.'
+                'message' => 'Error, los datos no se han enviado.',
+                "params" => $params_array,
             ];
         }
 

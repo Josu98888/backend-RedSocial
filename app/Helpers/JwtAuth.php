@@ -3,7 +3,6 @@
 namespace App\Helpers;
 
 use Firebase\JWT\JWT; //paquete para codificar y decodificar tokens
-use Illuminate\Support\Facades\DB; //paquete para hacer consultas a la BD
 use App\Models\User; //modelo User
 use DomainException;
 use Firebase\JWT\Key; //clase Key
@@ -69,7 +68,7 @@ class JwtAuth
         }
 
         if($identity != false) {          
-            return $decoded ;                          // Si $identity es true , retorna los datos decodificados del usuario.
+            return $decoded ;                          // Si $identity es true retorna el usuario.
         } else {
             return $auth ;                             //Si $identity es false , solo retorna true o false dependiendo de la validez del token.
         }

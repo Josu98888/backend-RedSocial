@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Image;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+
+use function PHPUnit\Framework\isEmpty;
 
 class ImageController extends Controller
 {
@@ -76,5 +79,26 @@ class ImageController extends Controller
 
             return response()->json($data, $data['code']);
         }
+    }
+
+    public function getImagesByUser($id)
+    {
+        $images = Image::where('user_id', $id)->get();                           // obtenemos las imagenes del usuario
+        $user = User::find($id);                                                 // obtenemos el usuario
+        if (!empty($images) && $user) {                                                   // Si existen imagenes
+            $data = [
+                'status' => 'success',
+                'code' => 200,
+                'images' => $images
+            ];
+        } else {                                                                  // Si no existen imagenes
+            $data = [
+                'status' => 'error',
+                'code' => 400,
+                'message' => 'Error, no existe el usuario.'
+            ];
+        }
+
+        return response()->json($data, $data['code']);                          // Devolvemos la respuesta en formato JSON
     }
 }

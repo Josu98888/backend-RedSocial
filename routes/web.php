@@ -24,3 +24,4 @@ Route::middleware([ApiAuthMiddleware::class])->group(function () {
 
 // Rutas de ImageController
 Route::get('/api/image/{filename}', [ImageController::class, 'getImage']);
+Route::get('/api/image/getImagesByUser/{id}', [ImageController::class, 'getImagesByUser']);
